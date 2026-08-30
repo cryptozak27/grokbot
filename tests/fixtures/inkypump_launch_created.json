@@ -1,0 +1,12 @@
+{
+  "address": "0x4cC8F6d5B7cE150CCC0A9B7664532B1283b96AC4",
+  "topics": [
+    "0x9d3b921bcb0eb03c555acd3968d3b3424efbad89ba35d7ad446cf59deb21d5f7",
+    "0x0000000000000000000000000000000000000000000000000000000000000007",
+    "0x000000000000000000000000aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "data": "0x000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb00000000000000000000000000000000000000000000000029a2241af62c0000",
+  "blockNumber": "0x2328",
+  "transactionHash": "0xabababababababababababababababababababababababababababababababab",
+  "logIndex": "0x0"
+}
