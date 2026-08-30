@@ -1,0 +1,122 @@
+# grokbot — chain-agnostic EVM memecoin pipeline
+# Default is paper: monitor, filter, score, log. No live buys.
+
+execution_mode: paper  # paper | live (live buy/sell is not implemented)
+
+llm:
+  base_url: https://api.x.ai/v1
+  auditor_model: grok-4-fast
+  narrative_model: grok-4-fast
+  timing_model: grok-4-fast
+  checker_model: grok-4
+  temperature: 0
+  timing_cache_seconds: 1200  # 20 min; valid range 15–30 min
+  timeout_seconds: 45
+
+filters:
+  require_metadata: true
+  min_name_len: 1
+  min_unique_buyers: 8
+  min_age_minutes: 1
+  max_age_minutes: 180
+  min_progress_pct: 5.0
+  max_progress_pct: 85.0
+  max_risk_score: 0.70
+  min_description_len: 8
+
+scoring:
+  # CODE weights, not the model. Components are 0–1.
+  weights:
+    narrative_fit: 0.22
+    virality: 0.18
+    community: 0.14
+    timing: 0.14
+    organic_score: 0.18
+    curve_health: 0.14
+  threshold: 0.62
+
+risk:
+  max_position_eth: 0.05
+  daily_loss_limit_eth: 0.15
+  max_trades_per_day: 10
+  max_open_positions: 3
+  shrink_start_pct: 0.70  # start shrinking size when daily loss hits this fraction of limit
+  default_size_eth: 0.02
+
+poll:
+  interval_seconds: 4
+  lookback_blocks: 4000
+  log_chunk_blocks: 1500  # PONS public RPC times out on wide eth_getLogs
+  min_chunk_blocks: 50
+  trade_lookback_blocks: 8000
+
+log_dir: logs
+
+launchpads:
+  pons:
+    enabled: true
+    stub: false
+    chain_id: 4663
+    name: pons
+    rpc_env: PONS_RPC_URL
+    rpc: https://rpc.mainnet.chain.robinhood.com
+    explorer: https://robinhoodchain.blockscout.com
+    weth: "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73"
+    graduation_weth_eth: 4.2
+    # V1 ("active factory" in https://docs.ponsfamily.com/)
+    factory: "0xA5aAb3F0c6EeadF30Ef1D3Eb997108E976351feB"
+    factory_start_block: 8991118
+    locker: "0x736D76699C26D0d966744cAe304C000d471f7F35"
+    legacy_factory: "0x0c37a24F5D23A486FA692d1500881d698B1F77a4"
+    legacy_factory_start_block: 8600612
+    # V2 factory from https://github.com/ponsdotdev/ponsfamily — live, different event layout
+    v2_factory: "0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e"
+    v2_factory_start_block: null  # not published in pons docs; paper mode uses head-lookback
+    v2_locker: "0x267444d099b10fb5ed7c3cc7b7c767adca574952"  # Bitquery / third-party indexers
+    v2_router: "0xe33e9e479df8802cb0866d5d05258bec4cf62948"
+    v3_factory: "0x1f7d7550B1b028f7571E69A784071F0205FD2EfA"
+    swap_router: "0xCaf681a66D020601342297493863E78C959E5cb2"
+    quoter_v2: "0x33e885eD0Ec9bF04EcfB19341582aADCb4c8A9E7"
+
+  inkypump:
+    enabled: true
+    stub: false
+    chain_id: 57073
+    name: inkypump
+    rpc_env: INK_RPC_URL
+    rpc: https://rpc-gel.inkonchain.com
+    explorer: https://explorer.inkonchain.com
+    weth: "0x4200000000000000000000000000000000000006"
+    # V2 hook proxy ONLY — docs.inkyswap.com
+    hook: "0x4cC8F6d5B7cE150CCC0A9B7664532B1283b96AC4"
+    launch_view_module: "0xce83E3659251116d114Ec1CA729ffB49B99403c3"
+    pool_manager: "0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32"
+    universal_router: "0x551134e92e537cEAa217c2ef63210Af3CE96a065"
+    sale_split_calculator: "0xF665c51026e4c35Bbc4FC91F00c7A4b10089ED1f"
+    quoter: "0x3972C00f7ed4885e145823eb7C655375d275A1C5"
+    min_raise_eth: 1.0
+    max_raise_eth: 5.0
+    start_block: null  # not published; paper mode uses head-lookback
+
+  clanker:
+    enabled: false
+    stub: true
+    chain_id: 8453
+    name: clanker
+    rpc: https://mainnet.base.org
+    explorer: https://basescan.org
+    # v4.0.0 factory on Base per Clanker deployed-contracts docs. Stub only — no live streaming.
+    factory: "0xE85A59c628F7d27878ACeB4bf3b35733630083a9"
+    note: "Stub adapter. Implement stream_launches against Clanker factory events before enabling."
+
+  fourmeme:
+    enabled: false
+    stub: true
+    chain_id: 56
+    name: fourmeme
+    rpc: https://bsc-dataseed.binance.org
+    explorer: https://bscscan.com
+    # Community-cited TokenManager2; not verified against an official four.meme docs page in this repo.
+    factory: "0x5c952063c7fc8610FFDB798152D69F0B9550762b"
+    wbnb: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
+    note: "Stub adapter. Confirm factory against official four.meme docs before enabling."
